@@ -3,10 +3,6 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-#if canImport(VCEntities)
-    import VCEntities
-#endif
-
 enum VerifiableCredentialError: Error {
     case missingIssuedOnValueInVerifiableCredential
     case missingJtiInVerifiableCredential
@@ -17,7 +13,7 @@ enum VerifiableCredentialError: Error {
  * Verifiable Credential object contains the raw VC, and the contract that created the Verifiable Credential.
  * This object conforms to the Mappable protocol and maps VC claims and display contract to a Verified Id.
  */
-struct VCVerifiedId: VerifiedId {
+struct VCVerifiedId: InternalVerifiedId {
 
     public let id: String
     
@@ -45,12 +41,12 @@ struct VCVerifiedId: VerifiedId {
         
         self.raw = raw
         self.contract = contract
-        self.issuedOn = Date(timeIntervalSince1970: issuedOn)
+        self.issuedOn = Date(timeIntervalSince1970: TimeInterval(issuedOn))
         self.id = id
         self.types = raw.content.vc?.type ?? []
         
         if let expiresOn = raw.content.exp {
-            self.expiresOn = Date(timeIntervalSince1970: expiresOn)
+            self.expiresOn = Date(timeIntervalSince1970: TimeInterval(expiresOn))
         } else {
             self.expiresOn = nil
         }
@@ -62,6 +58,8 @@ struct VCVerifiedId: VerifiedId {
         case raw, contract
     }
     
+    /// Do not change this logic. This method determines how Verified IDs will be deserialized.
+    /// Developer are encouraged to use this logic to deserialize Verified IDs from their databases.
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         let rawToken = try values.decode(String.self, forKey: .raw)
@@ -72,6 +70,8 @@ struct VCVerifiedId: VerifiedId {
         try self.init(raw: raw, from: contract)
     }
     
+    /// Do not change this logic. This method determines how Verified IDs will be serialized.
+    /// Developer are encouraged to use this logic to serialize Verified IDs from their databases.
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         let serializedToken = try raw.serialize()
@@ -79,22 +79,32 @@ struct VCVerifiedId: VerifiedId {
         try container.encode(contract, forKey: .contract)
     }
     
-    public func getClaims() -> [VerifiedIdClaim] {
+    public func getClaims() -> [VerifiedIdClaim] 
+    {
         
-        guard let vcClaims = raw.content.vc?.credentialSubject else {
+        guard let vcClaims = raw.content.vc?.credentialSubject else 
+        {
             return []
         }
         
         let claimLabels = contract.display.claims
-        
         var verifiedIdClaims: [VerifiedIdClaim] = []
-        /// TODO: add casting to correct type from contract.
-        for (claim, value) in vcClaims {
-            if let claimStyle = claimLabels["vc.credentialSubject.\(claim)"] {
-                verifiedIdClaims.append(VerifiedIdClaim(id: claimStyle.label,
-                                                        value: value))
-            } else {
+
+        for (claim, value) in vcClaims 
+        {
+            if let claimStyle = claimLabels["vc.credentialSubject.\(claim)"]
+            {
                 verifiedIdClaims.append(VerifiedIdClaim(id: claim,
+                                                        label: claimStyle.label,
+                                                        type: claimStyle.type,
+                                                        value: value))
+            }
+            else
+            {
+                /// Default to String.
+                verifiedIdClaims.append(VerifiedIdClaim(id: claim,
+                                                        label: nil,
+                                                        type: nil,
                                                         value: value))
             }
         }

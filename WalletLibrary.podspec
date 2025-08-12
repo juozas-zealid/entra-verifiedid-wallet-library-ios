@@ -88,9 +88,13 @@ Pod::Spec.new do |s|
           "#{vcsdkPath}/VCToken/VCToken/**/*.swift",
           "#{vcsdkPath}/VCCrypto/VCCrypto/**/*.swift"
       ]
+
+     # Compile the Core Data model into .momd and include generated classes
+     cs.core_data_model "#{vcsdkPath}/VCServices/VCServices/Resources/coreData/VerifiedidDataModel.xcdatamodeld"
+
      cs.resource_bundles = {
         'WalletLibraryResources' => [
-          "#{vcsdkPath}/VCServices/VCServices/Resources/**/*.{xcdatamodeld,xcdatamodel,mom,momd}"
+          "#{vcsdkPath}/VCServices/VCServices/Resources/**/*.{mom,momd}"
         ]
       } 
 

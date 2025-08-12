@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name= 'WalletLibrary'
-  s.version= '1.0.1'
+  s.version= '1.0.4'
   s.license= 'MIT'
   s.summary= 'An SDK to manage your Decentralized Identities and Verifiable Credentials.'
   s.homepage= 'https://github.com/microsoft/entra-verifiedid-wallet-library-ios'
@@ -88,7 +88,13 @@ Pod::Spec.new do |s|
           "#{vcsdkPath}/VCToken/VCToken/**/*.swift",
           "#{vcsdkPath}/VCCrypto/VCCrypto/**/*.swift"
       ]
-      cs.resources = "#{vcsdkPath}/VCServices/VCServices/Resources/**/*.{xcdatamodeld,xcdatamodel,mom,momd}"
+     cs.resource_bundles = {
+        'WalletLibraryResources' => [
+          "#{vcsdkPath}/VCServices/VCServices/Resources/**/*.{xcdatamodeld,xcdatamodel,mom,momd}"
+        ]
+      } 
+
+      #cs.resources = "#{vcsdkPath}/VCServices/VCServices/Resources/**/*.{xcdatamodeld,xcdatamodel,mom,momd}"
       cs.exclude_files = [
           "WalletLibrary/**/*Test/*.swift"
       ]
